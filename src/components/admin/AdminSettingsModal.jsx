@@ -169,17 +169,17 @@ const AdminSettingsModal = ({ isOpen, onClose }) => {
                     className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
                 >
                     {/* Header */}
-                    <div className="relative p-6 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-white flex-shrink-0">
+                    <div className="relative p-6 border-b border-gray-100 bg-gradient-to-r from-pink-50/50 to-white flex-shrink-0">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900">Admin Settings</h2>
-                                <p className="text-sm text-gray-500">Manage your account preferences</p>
+                                <h2 className="text-xl font-bold text-gray-900">Admin Settings</h2>
+                                <p className="text-xs text-gray-400 mt-0.5">Manage your account preferences</p>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-all"
+                                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                             >
-                                <FiX size={24} />
+                                <FiX size={20} />
                             </button>
                         </div>
                     </div>
@@ -193,7 +193,7 @@ const AdminSettingsModal = ({ isOpen, onClose }) => {
                                     type="button"
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
-                                        ? 'border-primary-500 text-primary-600'
+                                        ? 'border-[#FF64B4] text-[#FF64B4]'
                                         : 'border-transparent text-gray-500 hover:text-gray-700'
                                         }`}
                                 >
@@ -251,11 +251,11 @@ const AdminSettingsModal = ({ isOpen, onClose }) => {
                                     animate={{ opacity: 1, x: 0 }}
                                     className="space-y-6"
                                 >
-                                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
-                                        <FiShield className="text-blue-500 mt-1" />
+                                    <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start gap-3">
+                                        <FiShield className="text-red-500 mt-1" />
                                         <div>
-                                            <h4 className="font-bold text-blue-900 text-sm">Secure Your Account</h4>
-                                            <p className="text-xs text-blue-700 mt-1">Use a strong password to keep your admin access safe.</p>
+                                            <h4 className="font-bold text-red-900 text-sm">Secure Your Account</h4>
+                                            <p className="text-xs text-red-600 mt-1">Use a strong password to keep your admin access safe.</p>
                                         </div>
                                     </div>
 
@@ -319,11 +319,11 @@ const AdminSettingsModal = ({ isOpen, onClose }) => {
                                                     onChange={() => handleNotificationChange(item.key)}
                                                     className="sr-only peer"
                                                 />
-                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF64B4]"></div>
                                             </div>
                                         </div>
                                     ))}
-                                    <p className="text-xs text-green-600 text-center pt-4 flex items-center justify-center gap-1">
+                                    <p className="text-xs text-emerald-600 text-center pt-4 flex items-center justify-center gap-1">
                                         <FiCheck size={12} /> Syncing with your secure profile.
                                     </p>
                                 </motion.div>

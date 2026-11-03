@@ -48,6 +48,7 @@ const Products = () => {
     const category = searchParams.get('category') || '';
     const sort = searchParams.get('sort') || 'newest';
     const search = searchParams.get('search') || '';
+    const recipient = searchParams.get('recipient') || '';
     const minPrice = searchParams.get('minPrice') || '';
     const maxPrice = searchParams.get('maxPrice') || '';
     const featured = searchParams.get('featured') || '';
@@ -66,7 +67,7 @@ const Products = () => {
     useEffect(() => {
         setPage(1);
         setAllProducts([]);
-    }, [filters, search]);
+    }, [filters, search, recipient]);
 
 
     // Queries
@@ -76,6 +77,7 @@ const Products = () => {
         category: filters.category,
         sort: filters.sort,
         search,
+        recipient,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         featured: filters.featured,
@@ -106,15 +108,26 @@ const Products = () => {
         if (filters.category) params.set('category', filters.category);
         if (filters.sort !== 'newest') params.set('sort', filters.sort);
         if (search) params.set('search', search);
+        if (recipient) params.set('recipient', recipient);
         if (filters.minPrice) params.set('minPrice', filters.minPrice);
         if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
         if (filters.featured) params.set('featured', filters.featured);
 
         setSearchParams(params);
-    }, [filters, search, setSearchParams]);
+    }, [filters, search, recipient, setSearchParams]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
+    const handleRecipientChange = (val) => {
+        const params = new URLSearchParams(searchParams);
+        if (val) {
+            params.set('recipient', val);
+        } else {
+            params.delete('recipient');
+        }
+        setSearchParams(params);
     };
 
     const clearFilters = () => {
@@ -126,6 +139,7 @@ const Products = () => {
             priceRange: '',
             featured: '',
         });
+        setSearchParams(new URLSearchParams());
     };
 
     // Infinite Scroll Observer
@@ -153,7 +167,7 @@ const Products = () => {
     }, [isFetching, productsData]);
 
 
-    const hasActiveFiltersOnly = filters.category || filters.priceRange || filters.featured;
+    const hasActiveFiltersOnly = filters.category || filters.priceRange || filters.featured || recipient;
     const hasActiveSort = filters.sort !== 'newest';
     const hasActiveFilters = hasActiveFiltersOnly || hasActiveSort;
 
@@ -171,16 +185,18 @@ const Products = () => {
 
     // Breadcrumbs
     const breadcrumbs = [];
-    if (selectedCategory || search) {
+    if (selectedCategory || search || recipient) {
         breadcrumbs.push({ label: 'Products', path: '/products' });
         if (selectedCategory) breadcrumbs.push({ label: selectedCategory.name });
         if (search) breadcrumbs.push({ label: `Search: ${search}` });
+        if (recipient === 'him') breadcrumbs.push({ label: 'Curated for Him' });
+        if (recipient === 'her') breadcrumbs.push({ label: 'Adored by Her' });
     } else {
         breadcrumbs.push({ label: 'Products' });
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-16 bg-white">
+        <div className="min-h-screen pt-44 md:pt-32 pb-14 md:pb-4 bg-white">
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
 
 
@@ -190,14 +206,18 @@ const Products = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8"
                 >
-                    {/* Back button and breadcrumbs - hidden on mobile */}
-                    <div className="hidden sm:flex items-center gap-4 mb-6">
-                        <BackButton onClick={() => navigate('/')} />
+                    {/* Back button and breadcrumbs - visible on all devices */}
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                        <BackButton onClick={() => navigate(-1)} />
                         <Breadcrumbs items={breadcrumbs} />
                     </div>
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-black mt-4 sm:mt-0 tracking-tight">
                         {search ? (
                             <span className="text-gray-900">Results for "{search}"</span>
+                        ) : recipient === 'him' ? (
+                            <span className="text-gray-900 font-serif">Curated for Him 👨</span>
+                        ) : recipient === 'her' ? (
+                            <span className="text-gray-900 font-serif">Adored by Her 👩</span>
                         ) : selectedCategory ? (
                             <span className="text-gray-900">{selectedCategory.name}</span>
                         ) : (
@@ -216,13 +236,27 @@ const Products = () => {
                     {/* Left side: Category & Items Count */}
                     <div className="flex items-center gap-2 font-semibold whitespace-nowrap">
                         <span className="text-gray-900 text-lg sm:text-lg">
-                            {filters.featured === 'true'
-                                ? 'Best Selling'
-                                : selectedCategory?.name || 'All Products'}
+                            {recipient === 'him'
+                                ? 'Curated for Him'
+                                : recipient === 'her'
+                                    ? 'Adored by Her'
+                                    : filters.featured === 'true'
+                                        ? 'Best Selling'
+                                        : selectedCategory?.name || 'All Products'}
                         </span>
                         <span className="text-gray-500 font-normal text-sm sm:text-base">
                             ({productsData?.total || 0} items)
                         </span>
+                        {recipient && (
+                            <button
+                                onClick={() => handleRecipientChange('')}
+                                className="ml-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-pink-50 text-[#FF64B4] border border-pink-200 hover:bg-pink-100 transition-colors"
+                                title="Clear recipient filter"
+                            >
+                                <span>{recipient === 'him' ? '👨 For Him' : '👩 For Her'}</span>
+                                <span className="text-sm font-bold leading-none">×</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* Right side: Filters & Sort */}
@@ -235,7 +269,7 @@ const Products = () => {
                                 className="flex flex-col items-center px-3 py-1.5 focus:outline-none"
                             >
                                 <span className="text-[11px] font-bold text-gray-800 uppercase tracking-widest leading-tight">Filter By Price</span>
-                                <div className="flex items-center gap-1 mt-0.5 text-sm font-bold text-primary-600">
+                                <div className="flex items-center gap-1 mt-0.5 text-sm font-bold text-gray-900">
                                     <span className="truncate">
                                         {filters.priceRange === 'below-500' ? 'Below ₹500' :
                                             filters.priceRange === '500-1000' ? '₹500 - ₹1,000' :
@@ -334,7 +368,7 @@ const Products = () => {
                 </motion.div>
 
                 {/* Products Grid Container */}
-                <div className="w-full min-h-[800px]">
+                <div className="w-full">
                     <ProductGrid
                         products={allProducts}
                         columns={4}
@@ -342,16 +376,11 @@ const Products = () => {
                     />
 
                     {/* Infinite Scroll Sentinel / Skeleton */}
-                    <div ref={loadMoreRef} className="pt-12">
-                        {isFetching && page > 1 && (
-                            <ProductGridSkeleton count={4} />
-                        )}
-                    </div>
-
-                    {/* End of list message */}
-                    {!isFetching && productsData?.page === productsData?.pages && allProducts.length > 0 && (
-                        <div className="text-center text-gray-400 py-12 font-medium">
-                            You&apos;ve viewed all available products
+                    {productsData?.page < productsData?.pages && (
+                        <div ref={loadMoreRef} className="py-2">
+                            {isFetching && page > 1 && (
+                                <ProductGridSkeleton count={4} />
+                            )}
                         </div>
                     )}
 

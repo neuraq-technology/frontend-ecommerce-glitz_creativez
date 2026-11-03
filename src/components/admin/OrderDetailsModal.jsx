@@ -31,13 +31,13 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="w-full max-w-2xl bg-white rounded-2xl shadow-gold overflow-hidden flex flex-col h-[600px]"
+                    className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[600px] border border-gray-100"
                 >
                     {/* Header */}
                     <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10 shrink-0">
                         <div>
                             <h2 className="text-xl font-bold text-gray-900">Order #{order._id.slice(-6)}</h2>
-                            <p className="text-sm text-gray-500">Placed on {formatDate(order.createdAt)}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">Placed on {formatDate(order.createdAt)}</p>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
@@ -48,9 +48,9 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                             </span>
                             <button
                                 onClick={onClose}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-all"
+                                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all"
                             >
-                                <FiX size={24} />
+                                <FiX size={20} />
                             </button>
                         </div>
                     </div>
@@ -62,7 +62,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex-1 flex items-center justify-center gap-2 py-4 px-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
-                                    ? 'border-primary-500 text-primary-600 bg-primary-50/50'
+                                    ? 'border-[#FF64B4] text-[#FF64B4] bg-pink-50/50'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                     }`}
                             >
@@ -78,7 +78,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                             <div className="space-y-6">
                                 <div className="space-y-4">
                                     {order.orderItems?.map((item, index) => (
-                                        <div key={index} className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-primary-100 transition-colors bg-white shadow-sm">
+                                        <div key={index} className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-pink-200 transition-colors bg-white shadow-sm">
                                             <div className="w-20 h-20 rounded-lg bg-gray-50 border border-gray-200 overflow-hidden shrink-0">
                                                 <img
                                                     src={item.image}
@@ -89,7 +89,52 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
                                                 <p className="text-sm text-gray-500 mt-1">Quantity: {item.quantity || item.qty}</p>
-                                                <p className="font-bold text-primary-600 mt-2">${item.price?.toFixed(2)}</p>
+                                                <p className="font-bold text-gray-900 mt-2">₹{item.price?.toFixed(2)}</p>
+
+                                                {/* Customer Personalisation Details */}
+                                                {(item.customImage || item.customText) && (
+                                                    <div className="mt-3 p-3 rounded-xl bg-pink-50/60 border border-pink-100 flex items-start gap-3">
+                                                        {item.customImage && (
+                                                            <div className="shrink-0">
+                                                                <a
+                                                                    href={item.customImage.startsWith('http') ? item.customImage : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.customImage}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="block"
+                                                                >
+                                                                    <img
+                                                                        src={item.customImage.startsWith('http') ? item.customImage : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.customImage}`}
+                                                                        alt="Customer upload"
+                                                                        className="w-14 h-14 object-cover rounded-lg border border-pink-200 hover:scale-105 transition-transform"
+                                                                    />
+                                                                </a>
+                                                                <a
+                                                                    href={item.customImage.startsWith('http') ? item.customImage : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${item.customImage}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    download
+                                                                    className="mt-1 block text-center text-[10px] font-bold text-[#FF64B4] hover:underline"
+                                                                >
+                                                                    Download
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF64B4] block">
+                                                                🎨 Custom Order Details
+                                                            </span>
+                                                            {item.customText ? (
+                                                                <p className="text-xs text-gray-800 font-medium mt-0.5">
+                                                                    <span className="text-gray-500 font-normal">Text to Inscribe:</span> "{item.customText}"
+                                                                </p>
+                                                            ) : (
+                                                                <p className="text-xs text-gray-500 italic mt-0.5">
+                                                                    Custom photo provided for artisan crafting.
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -102,19 +147,19 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                                     </h4>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Subtotal</span>
-                                        <span>${order.itemsPrice?.toFixed(2)}</span>
+                                        <span>₹{order.itemsPrice?.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Shipping</span>
-                                        <span>${order.shippingPrice?.toFixed(2)}</span>
+                                        <span>₹{order.shippingPrice?.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Tax</span>
-                                        <span>${order.taxPrice?.toFixed(2)}</span>
+                                        <span>₹{order.taxPrice?.toFixed(2)}</span>
                                     </div>
                                     <div className="pt-2 border-t border-gray-200 flex justify-between font-bold text-lg text-gray-900">
                                         <span>Total</span>
-                                        <span>${order.totalPrice?.toFixed(2)}</span>
+                                        <span>₹{order.totalPrice?.toFixed(2)}</span>
                                     </div>
                                     <div className="pt-2 mt-2 border-t border-gray-200">
                                         <div className="flex justify-between items-center">
@@ -135,7 +180,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                         {activeTab === 'timeline' && (
                             <div className="relative pl-8 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
                                 <div className="relative">
-                                    <div className="absolute -left-[29px] top-1 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center ring-4 ring-white">
+                                    <div className="absolute -left-[29px] top-1 w-6 h-6 rounded-full bg-pink-100 text-[#FF64B4] flex items-center justify-center ring-4 ring-white">
                                         <FiBox size={14} />
                                     </div>
                                     <div>
@@ -173,7 +218,7 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                         {activeTab === 'customer' && (
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                    <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xl font-bold">
+                                    <div className="w-16 h-16 rounded-full bg-pink-100 flex items-center justify-center text-[#FF64B4] text-xl font-bold">
                                         {order.user?.name?.charAt(0) || 'G'}
                                     </div>
                                     <div>
@@ -215,36 +260,38 @@ const OrderDetailsModal = ({ isOpen, onClose, order }) => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div className="p-4 rounded-xl border border-gray-100">
-                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Recipient Name</p>
-                                        <p className="font-medium text-gray-900">{order.shippingAddress?.fullName || order.user?.name}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Recipient Name</p>
+                                        <p className="font-bold text-gray-900">{order.shippingAddress?.fullName || order.user?.name || 'Customer'}</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Contact Phone</p>
+                                        <p className="font-bold text-gray-900 font-mono">{order.shippingAddress?.phone || order.user?.phone || 'N/A'}</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border border-gray-100 sm:col-span-2">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">House / Building Name</p>
+                                        <p className="font-medium text-gray-900">{order.shippingAddress?.houseNo || order.shippingAddress?.street || order.shippingAddress?.address || '—'}</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border border-gray-100 sm:col-span-2">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Road Name / Area / Colony</p>
+                                        <p className="font-medium text-gray-900">{order.shippingAddress?.roadArea || '—'}</p>
                                     </div>
                                     <div className="p-4 rounded-xl border border-gray-100">
-                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Address Line 1</p>
-                                        <p className="font-medium text-gray-900">{order.shippingAddress?.address}</p>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">District / City</p>
+                                        <p className="font-bold text-gray-900">{order.shippingAddress?.district || order.shippingAddress?.city || '—'}</p>
                                     </div>
                                     <div className="p-4 rounded-xl border border-gray-100">
-                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Address Line 2 (Street)</p>
-                                        <p className="font-medium text-gray-900">{order.shippingAddress?.street || '-'}</p>
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">State</p>
+                                        <p className="font-bold text-gray-900">{order.shippingAddress?.state || '—'}</p>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-4 rounded-xl border border-gray-100">
-                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">City</p>
-                                            <p className="font-medium text-gray-900">{order.shippingAddress?.city}</p>
-                                        </div>
-                                        <div className="p-4 rounded-xl border border-gray-100">
-                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">State</p>
-                                            <p className="font-medium text-gray-900">{order.shippingAddress?.state}</p>
-                                        </div>
-                                        <div className="p-4 rounded-xl border border-gray-100">
-                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Zip Code</p>
-                                            <p className="font-medium text-gray-900">{order.shippingAddress?.zipCode || order.shippingAddress?.postalCode}</p>
-                                        </div>
-                                        <div className="p-4 rounded-xl border border-gray-100">
-                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Country</p>
-                                            <p className="font-medium text-gray-900">{order.shippingAddress?.country}</p>
-                                        </div>
+                                    <div className="p-4 rounded-xl border border-gray-100">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Pincode</p>
+                                        <p className="font-bold text-gray-900 font-mono">{order.shippingAddress?.zipCode || order.shippingAddress?.postalCode || '—'}</p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border border-gray-100">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Country</p>
+                                        <p className="font-medium text-gray-900">{order.shippingAddress?.country || 'India'}</p>
                                     </div>
                                 </div>
                             </div>

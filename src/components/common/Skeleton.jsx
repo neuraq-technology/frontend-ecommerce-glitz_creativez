@@ -29,36 +29,35 @@ const Skeleton = ({
 // Product Card Skeleton
 const ProductCardSkeleton = () => {
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-card">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200/80 overflow-hidden shadow-xs flex flex-col justify-between h-full">
             {/* Image */}
-            <Skeleton variant="rect" className="w-full aspect-square" />
+            <Skeleton variant="rect" className="w-full aspect-[4/3]" />
 
             {/* Content */}
-            <div className="p-5 space-y-3">
-                {/* Category */}
-                <Skeleton variant="text" className="w-20 h-3" />
+            <div className="p-3 sm:p-5 space-y-2 sm:space-y-3 flex-1 flex flex-col justify-between">
+                <div>
+                    {/* Title */}
+                    <Skeleton variant="text" className="w-4/5 h-4 sm:h-5" />
 
-                {/* Title */}
-                <Skeleton variant="text" className="w-full h-5" />
-
-                {/* Rating */}
-                <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                        <Skeleton key={i} variant="circle" className="w-4 h-4" />
-                    ))}
+                    {/* Description */}
+                    <Skeleton variant="text" className="w-full h-2.5 sm:h-3 mt-1.5 sm:mt-2" />
+                    <Skeleton variant="text" className="w-2/3 h-2.5 sm:h-3 mt-1" />
                 </div>
 
-                {/* Price */}
-                <Skeleton variant="text" className="w-24 h-6" />
+                {/* Bottom Row */}
+                <div className="pt-2 sm:pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <Skeleton variant="text" className="w-16 sm:w-20 h-4 sm:h-5" />
+                    <Skeleton variant="text" className="w-12 sm:w-16 h-3 sm:h-4" />
+                </div>
             </div>
         </div>
     );
 };
 
 // Product Grid Skeleton
-const ProductGridSkeleton = ({ count = 8 }) => {
+const ProductGridSkeleton = ({ count = 8, className = '' }) => {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6 ${className}`}>
             {[...Array(count)].map((_, i) => (
                 <motion.div
                     key={i}

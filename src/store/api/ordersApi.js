@@ -14,19 +14,18 @@ export const ordersApi = apiSlice.injectEndpoints({
             query: () => '/orders',
             providesTags: ['Order'],
         }),
-        createRazorpayOrder: builder.mutation({
+        createCashfreeOrder: builder.mutation({
             query: (id) => ({
-                url: `/orders/${id}/razorpay`,
+                url: `/orders/${id}/cashfree`,
                 method: 'POST',
             }),
         }),
-        verifyRazorpayPayment: builder.mutation({
-            query: ({ id, ...data }) => ({
+        verifyCashfreePayment: builder.mutation({
+            query: (id) => ({
                 url: `/orders/${id}/verify-payment`,
                 method: 'POST',
-                body: data,
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'Order', id }],
+            invalidatesTags: (result, error, id) => [{ type: 'Order', id }],
         }),
         getOrderById: builder.query({
             query: (id) => `/orders/${id}`,
@@ -47,6 +46,6 @@ export const {
     useGetMyOrdersQuery,
     useGetOrderByIdQuery,
     useCancelOrderMutation,
-    useCreateRazorpayOrderMutation,
-    useVerifyRazorpayPaymentMutation,
+    useCreateCashfreeOrderMutation,
+    useVerifyCashfreePaymentMutation,
 } = ordersApi;

@@ -112,7 +112,7 @@ const CartDrawer = () => {
                                                 <h3 className="text-gray-900 font-medium truncate">
                                                     {item.product.name}
                                                 </h3>
-                                                <p className="text-primary-600 font-semibold mt-1">
+                                                <p className="text-gray-900 font-bold mt-1">
                                                     ₹{item.product.price?.toFixed(2)}
                                                 </p>
 
@@ -161,7 +161,7 @@ const CartDrawer = () => {
                                 {/* Subtotal */}
                                 <div className="flex items-center justify-between text-lg">
                                     <span className="text-gray-600">Subtotal</span>
-                                    <span className="text-gray-900 font-bold gradient-text">₹{total.toFixed(2)}</span>
+                                    <span className="text-gray-900 font-bold text-xl">₹{total.toFixed(2)}</span>
                                 </div>
 
                                 <p className="text-sm text-gray-500">

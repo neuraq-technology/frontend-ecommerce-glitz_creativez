@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useDispatch } from 'react-redux';
 import Confetti from 'react-confetti';
 import { FiCheck, FiPackage, FiTruck, FiHome, FiShoppingBag } from 'react-icons/fi';
-import { useGetOrderByIdQuery } from '../store/api/ordersApi';
+import { useGetOrderByIdQuery, useVerifyCashfreePaymentMutation } from '../store/api/ordersApi';
+import { clearCart } from '../store/slices/cartSlice';
 import Loader from '../components/common/Loader';
 import Button from '../components/common/Button';
 import BackButton from '../components/common/BackButton';
@@ -11,6 +13,7 @@ import Breadcrumbs from '../components/common/Breadcrumbs';
 
 const OrderSuccess = () => {
     const { orderId } = useParams();
+    const dispatch = useDispatch();
     const [showConfetti, setShowConfetti] = useState(true);
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
@@ -19,6 +22,21 @@ const OrderSuccess = () => {
 
     const { data: orderData, isLoading } = useGetOrderByIdQuery(orderId);
     const order = orderData?.data;
+    const [verifyCashfreePayment] = useVerifyCashfreePaymentMutation();
+
+    // Ensure cart is cleared upon arriving at order confirmation
+    useEffect(() => {
+        dispatch(clearCart());
+    }, [dispatch]);
+
+    useEffect(() => {
+        const isOnlinePayment = ['cashfree', 'upi', 'online', 'card', 'netbanking'].includes(order?.paymentMethod?.toLowerCase());
+        if (order && isOnlinePayment && !order.isPaid && order.cashfreeOrderId) {
+            verifyCashfreePayment(orderId)
+                .unwrap()
+                .catch((err) => console.log('Payment pending or verification info:', err?.data?.message || err));
+        }
+    }, [order, orderId, verifyCashfreePayment]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -57,7 +75,7 @@ const OrderSuccess = () => {
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-16 bg-white">
+        <div className="min-h-screen pt-44 md:pt-32 pb-16 bg-white">
             {/* Confetti */}
             {showConfetti && (
                 <Confetti
@@ -109,11 +127,14 @@ const OrderSuccess = () => {
                                 #{order.orderNumber || order._id?.slice(-8)}
                             </p>
                         </div>
-                        <div className={`px-4 py-2 rounded-full text-sm font-medium ${order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                                order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                            }`}>
+                        <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                            order.status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status?.toLowerCase() === 'processing' ? 'bg-blue-100 text-blue-800' :
+                            order.status?.toLowerCase() === 'shipped' ? 'bg-purple-100 text-purple-800' :
+                            order.status?.toLowerCase() === 'delivered' ? 'bg-green-100 text-green-800' :
+                            order.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                        }`}>
                             {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
                         </div>
                     </div>
@@ -187,9 +208,9 @@ const OrderSuccess = () => {
                     <div className="flex items-center justify-between">
                         {[
                             { icon: <FiPackage />, label: 'Order Placed', active: true },
-                            { icon: <FiCheck />, label: 'Confirmed', active: order.status !== 'pending' },
-                            { icon: <FiTruck />, label: 'Shipped', active: order.status === 'shipped' || order.status === 'delivered' },
-                            { icon: <FiHome />, label: 'Delivered', active: order.status === 'delivered' },
+                            { icon: <FiCheck />, label: 'Confirmed', active: order.status?.toLowerCase() !== 'pending' && order.status?.toLowerCase() !== 'cancelled' },
+                            { icon: <FiTruck />, label: 'Shipped', active: order.status?.toLowerCase() === 'shipped' || order.status?.toLowerCase() === 'delivered' },
+                            { icon: <FiHome />, label: 'Delivered', active: order.status?.toLowerCase() === 'delivered' },
                         ].map((step, index) => (
                             <div key={index} className="flex flex-col items-center">
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${step.active

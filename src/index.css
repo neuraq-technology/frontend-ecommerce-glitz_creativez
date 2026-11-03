@@ -16,30 +16,48 @@
 
   html {
     scroll-behavior: smooth;
+    overscroll-behavior-y: none;
   }
 
   body {
     @apply bg-white text-gray-800 font-sans antialiased overflow-x-hidden;
     min-height: 100vh;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
 
-  /* Custom scrollbar - Light Gold Theme */
+  /* Custom scrollbar for vertical page scrolling */
   ::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-secondary-100;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary-300 rounded-full;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
     transition: background-color 0.3s;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary-400;
+    background-color: #ff9bcb;
+  }
+
+  /* Utility classes to completely hide scrollbars in horizontal carousels */
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  .no-scrollbar,
+  .scrollbar-none {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
   }
 
 
@@ -347,4 +365,32 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+}
+
+/* ============================================================
+   GLOBAL SELECT & OPTION LUXURY PINK THEME
+   Replaces default OS/browser blue selection with brand pink
+   ============================================================ */
+select {
+  accent-color: #FF64B4 !important;
+}
+
+select option {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  padding: 10px 14px;
+}
+
+select option:checked,
+select option:hover,
+select option:focus {
+  background: linear-gradient(0deg, #FF64B4 0%, #FF64B4 100%) !important;
+  background-color: #FF64B4 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+::selection {
+  background-color: #FF64B4 !important;
+  color: #ffffff !important;
 }

@@ -37,31 +37,25 @@ const SizeSelector = ({ sizes, selectedSize, onSelectSize }) => {
 
             {!isLargeSet ? (
                 /* 
-                   PILL LAYOUT (For Clothing/Small sets) 
-                   - Uses a beautiful grid with hover lift effects
+                   PILL LAYOUT (For Clothing/Frames/Products with sizes)
                 */
-                <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 w-full">
+                <div className="flex flex-wrap gap-2.5 sm:gap-3 w-full">
                     {sizes.map((size) => {
                         const isSelected = selectedSize?.name === size.name;
                         return (
                             <motion.button
                                 key={size.name}
-                                whileHover={{ y: -4, shadow: "0 10px 15px -3px rgba(0,0,0,0.1)" }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => onSelectSize(size)}
-                                className={`relative flex items-center justify-center h-12 text-sm font-bold transition-all duration-300 rounded-xl border-2 ${isSelected
-                                    ? 'text-white border-primary-500 bg-primary-500 shadow-glow shadow-primary-500/20'
-                                    : 'text-gray-600 border-gray-100 hover:border-primary-200 bg-white hover:bg-primary-50/30'
-                                    } outline-none`}
+                                type="button"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.96 }}
+                                onClick={() => onSelectSize(isSelected ? null : size)}
+                                className={`px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold transition-all duration-200 rounded-xl border-2 cursor-pointer outline-none ${
+                                    isSelected
+                                        ? 'bg-[#FF64B4] text-white border-[#FF64B4] shadow-sm'
+                                        : 'bg-white text-[#FF64B4] border-[#FF64B4] hover:bg-pink-50/60'
+                                }`}
                             >
-                                <span className="relative z-10">{size.name}</span>
-                                {isSelected && (
-                                    <motion.div
-                                        layoutId="size-pill-active"
-                                        className="absolute inset-0 bg-primary-500 rounded-[10px] -z-0"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                                    />
-                                )}
+                                <span>{size.name}</span>
                             </motion.button>
                         );
                     })}

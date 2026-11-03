@@ -17,35 +17,49 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
         stock: '',
         isActive: true,
         featured: false,
+        isCustomizable: null,
+        recipient: '',
         sizes: [],
     });
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('media');
+    const [activeTab, setActiveTab] = useState('basic');
 
     useEffect(() => {
         if (isOpen) {
-            // Only force media tab if we are opening it fresh
-            if (!activeTab) setActiveTab('media');
-        }
+            if (!activeTab) setActiveTab('basic');
 
-        if (product && isOpen) {
-            // Populate edit data
-            setFormData({
-                name: product.name || '',
-                price: product.price || '',
-                description: product.description || '',
-                image: product.images?.[0] || '',
-
-                category: product.category?._id || product.category || '',
-                stock: product.stock || '',
-                isActive: product.isActive !== false,
-                featured: product.featured || false,
-                sizes: product.sizes || [],
-            });
+            if (product) {
+                // Populate edit data
+                setFormData({
+                    name: product.name || '',
+                    price: product.price || '',
+                    description: product.description || '',
+                    image: product.images?.[0] || '',
+                    category: product.category?._id || product.category || '',
+                    stock: product.stock || '',
+                    isActive: product.isActive !== false,
+                    featured: product.featured || false,
+                    isCustomizable: product.isCustomizable !== undefined ? product.isCustomizable : null,
+                    recipient: product.recipient || '',
+                    sizes: product.sizes || [],
+                });
+            } else {
+                // Fresh reset for Add Product
+                setFormData({
+                    name: '',
+                    price: '',
+                    description: '',
+                    image: '',
+                    category: '',
+                    stock: '',
+                    isActive: true,
+                    featured: false,
+                    isCustomizable: null,
+                    recipient: '',
+                    sizes: [],
+                });
+            }
         }
-        // We REMOVED the else {} block that was wiping formData here.
-        // We want formData state to persist between re-renders when adding a new product.
-        // It should only be wiped manually on valid submission or explicit cancelation.
     }, [product?._id, isOpen]);
 
     const handleChange = (e) => {
@@ -60,6 +74,18 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
         if (!formData.name || !formData.price || !formData.stock || !formData.category) {
             setActiveTab('basic');
             toast.error('Please fill out all required fields in the Basic Information tab.');
+            return;
+        }
+
+        if (!formData.recipient) {
+            setActiveTab('basic');
+            toast.error('Please select a Gifting Recipient (For Him, For Her, or Both / Unisex).');
+            return;
+        }
+
+        if (formData.isCustomizable === null || formData.isCustomizable === undefined) {
+            setActiveTab('basic');
+            toast.error('Please choose whether customer photo upload is required (Yes or No).');
             return;
         }
 
@@ -88,6 +114,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
         try {
             const productData = {
                 ...formData,
+                isCustomizable: Boolean(formData.isCustomizable),
                 price: Number(formData.price),
                 stock: Number(formData.stock),
                 sizes: formData.sizes.map(s => ({ ...s, price: Number(s.price) })),
@@ -95,6 +122,10 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                 countInStock: Number(formData.stock)
             };
             await onSubmit(productData);
+            setFormData({
+                name: '', price: '', description: '', image: '',
+                category: '', stock: '', isActive: true, featured: false, isCustomizable: null, recipient: '', sizes: []
+            });
             onClose();
         } catch (error) {
             console.error(error);
@@ -112,24 +143,24 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
         // Reset form data completely if closing explicitly
         setFormData({
             name: '', price: '', description: '', image: '',
-            category: '', stock: '', isActive: true, featured: false, sizes: []
+            category: '', stock: '', isActive: true, featured: false, isCustomizable: null, recipient: '', sizes: []
         });
         onClose();
-    }
+    };
 
     if (!isOpen) return null;
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="w-full max-w-5xl bg-white rounded-2xl shadow-gold overflow-hidden flex flex-col max-h-[90vh]"
+                    className="w-full max-w-5xl bg-white rounded-2xl shadow-gold overflow-hidden flex flex-col max-h-[96vh]"
                 >
                     {/* Header */}
-                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                    <div className="px-6 py-3 border-b border-gray-100 flex items-center justify-between bg-white z-10 shrink-0">
                         <h2 className="text-xl font-bold text-gray-900">
                             {product ? 'Edit Product' : 'Add New Product'}
                         </h2>
@@ -142,66 +173,66 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                     </div>
 
                     {/* Tabs Navigation */}
-                    <div className="flex border-b border-gray-100 px-6 gap-2 sm:gap-6 bg-gray-50/50 flex-wrap">
+                    <div className="flex border-b border-gray-100 px-6 gap-2 sm:gap-6 bg-gray-50/50 flex-wrap shrink-0">
                         <button
                             type="button"
-                            onClick={() => setActiveTab('media')}
-                            className={`py-4 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'media'
-                                ? 'border-primary-500 text-primary-600'
+                            onClick={() => setActiveTab('basic')}
+                            className={`py-2.5 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'basic'
+                                ? 'border-[#FF64B4] text-[#FF64B4]'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'media' ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'basic' ? 'bg-[#FF64B4]' : 'bg-gray-300'}`}></div>
+                                Basic Information
+                            </div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('media')}
+                            className={`py-2.5 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'media'
+                                ? 'border-[#FF64B4] text-[#FF64B4]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'media' ? 'bg-[#FF64B4]' : 'bg-gray-300'}`}></div>
                                 Media
                             </div>
                         </button>
                         <button
                             type="button"
                             onClick={() => setActiveTab('sizes')}
-                            className={`py-4 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'sizes'
-                                ? 'border-primary-500 text-primary-600'
+                            className={`py-2.5 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'sizes'
+                                ? 'border-[#FF64B4] text-[#FF64B4]'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'sizes' ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'sizes' ? 'bg-[#FF64B4]' : 'bg-gray-300'}`}></div>
                                 Sizes & Variants
                             </div>
                         </button>
                         <button
                             type="button"
-                            onClick={() => setActiveTab('basic')}
-                            className={`py-4 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'basic'
-                                ? 'border-primary-500 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'basic' ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
-                                Basic Information
-                            </div>
-                        </button>
-                        <button
-                            type="button"
                             onClick={() => setActiveTab('description')}
-                            className={`py-4 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'description'
-                                ? 'border-primary-500 text-primary-600'
+                            className={`py-2.5 px-2 font-medium text-sm transition-all border-b-2 whitespace-nowrap ${activeTab === 'description'
+                                ? 'border-[#FF64B4] text-[#FF64B4]'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             <div className="flex items-center gap-2">
-                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'description' ? 'bg-primary-500' : 'bg-gray-300'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'description' ? 'bg-[#FF64B4]' : 'bg-gray-300'}`}></div>
                                 Description
                             </div>
                         </button>
                     </div>
 
                     {/* Content */}
-                    <form onSubmit={handleSubmit} className="flex-1 overflow-visible flex flex-col">
+                    <form onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-hidden flex flex-col">
 
                         {/* Tab Content Wrapper */}
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-white min-h-[400px]">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-3 bg-white">
 
                             {/* Basic Info Tab */}
                             {activeTab === 'basic' && (
@@ -209,9 +240,10 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="space-y-6 max-w-4xl mx-auto"
+                                    className="space-y-3 max-w-4xl mx-auto"
                                 >
-                                    <div className="grid grid-cols-1 gap-6">
+                                    {/* ROW 1: Product Name (Left) & Gifting Recipient (Right) */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                                         <Input
                                             label="Product Name"
                                             name="name"
@@ -220,33 +252,89 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                             placeholder="e.g. Premium Gift Box"
                                             required
                                         />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <Input
-                                                label="Price"
-                                                type="number"
-                                                name="price"
-                                                icon={<span className="font-bold text-gray-500">₹</span>}
-                                                value={formData.price}
-                                                onChange={handleChange}
-                                                placeholder="0.00"
-                                                required
-                                            />
-                                            <Input
-                                                label="Stock"
-                                                type="number"
-                                                name="stock"
-                                                icon={<FiPackage />}
-                                                value={formData.stock}
-                                                onChange={handleChange}
-                                                placeholder="0"
-                                                required
-                                            />
+
+                                        {/* Gifting Recipient Selector */}
+                                        <div className={`p-2.5 rounded-xl border transition-all ${
+                                            !formData.recipient ? 'bg-amber-50/40 border-amber-300' : 'bg-gray-50 border-gray-200'
+                                        }`}>
+                                            <div className="flex items-center justify-between gap-2 mb-1">
+                                                <span className="text-xs font-bold text-gray-900 flex items-center gap-1">
+                                                    <span>🎁 Gifting Recipient</span>
+                                                    <span className="text-rose-500 font-bold">*</span>
+                                                </span>
+                                                {formData.recipient && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, recipient: '' }))}
+                                                        className="text-[11px] font-semibold text-gray-400 hover:text-rose-500 transition-colors"
+                                                        title="Unselect"
+                                                    >
+                                                        ✕ Clear
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div className="inline-flex w-full rounded-xl bg-gray-200/80 p-1 gap-1">
+                                                {[
+                                                    { id: 'him', label: '👨 For Him' },
+                                                    { id: 'her', label: '👩 For Her' },
+                                                    { id: 'both', label: '✨ Both / Unisex' }
+                                                ].map(tab => {
+                                                    const isSelected = formData.recipient === tab.id;
+                                                    return (
+                                                        <button
+                                                            key={tab.id}
+                                                            type="button"
+                                                            onClick={() => setFormData(prev => ({
+                                                                ...prev,
+                                                                recipient: prev.recipient === tab.id ? '' : tab.id
+                                                            }))}
+                                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all text-center ${
+                                                                isSelected
+                                                                    ? 'bg-[#FF64B4] text-white shadow-xs'
+                                                                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                                                            }`}
+                                                        >
+                                                            {tab.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            {!formData.recipient && (
+                                                <p className="text-[10px] font-semibold text-amber-700 mt-1 flex items-center gap-1">
+                                                    <span>⚠️</span> Selection required.
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* ROW 2: Price & Stock */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <Input
+                                            label="Price"
+                                            type="number"
+                                            name="price"
+                                            icon={<span className="font-bold text-gray-500">₹</span>}
+                                            value={formData.price}
+                                            onChange={handleChange}
+                                            placeholder="0.00"
+                                            required
+                                        />
+                                        <Input
+                                            label="Stock"
+                                            type="number"
+                                            name="stock"
+                                            icon={<FiPackage />}
+                                            value={formData.stock}
+                                            onChange={handleChange}
+                                            placeholder="0"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* ROW 3: Category & Best Seller Status */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
                                             <div className="relative">
                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                                     <FiTag />
@@ -255,7 +343,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                                     name="category"
                                                     value={formData.category}
                                                     onChange={handleChange}
-                                                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border-2 border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none appearance-none text-gray-900"
+                                                    className="w-full pl-12 pr-4 py-2.5 rounded-xl bg-white border-2 border-gray-200 focus:border-[#FF64B4] focus:ring-4 focus:ring-[#FF64B4]/10 transition-all outline-none appearance-none text-gray-900"
                                                     required
                                                 >
                                                     <option value="">Select Category</option>
@@ -263,14 +351,13 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                                         <option key={cat._id} value={cat._id}>{cat.name}</option>
                                                     ))}
                                                 </select>
-                                                {/* Custom focus ring animation similar to Input component */}
-                                                <div className="absolute inset-0 rounded-xl border-2 border-primary-500/20 pointer-events-none opacity-0 transition-opacity peer-focus:opacity-100 mix-blend-multiply" />
+                                                <div className="absolute inset-0 rounded-xl border-2 border-[#FF64B4]/20 pointer-events-none opacity-0 transition-opacity peer-focus:opacity-100 mix-blend-multiply" />
                                             </div>
                                         </div>
 
                                         {/* Best Selling Toggle */}
-                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col justify-center">
-                                            <div className="flex items-center justify-between mb-2">
+                                        <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200 flex flex-col justify-center">
+                                            <div className="flex items-center justify-between mb-1">
                                                 <span className="text-sm font-bold text-gray-900">Best Seller Status</span>
                                                 <label className="relative inline-flex items-center cursor-pointer">
                                                     <input
@@ -279,10 +366,10 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                                         checked={formData.featured}
                                                         onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
                                                     />
-                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF64B4]"></div>
                                                 </label>
                                             </div>
-                                            <p className="text-xs text-gray-500 leading-relaxed">
+                                            <p className="text-[11px] text-gray-500 leading-snug">
                                                 {formData.featured
                                                     ? "Featured: Highlighted in the 'Popular Gifts' section."
                                                     : "Standard: Normal placement in the catalog."}
@@ -290,9 +377,10 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                            <div className="flex items-center justify-between mb-2">
+                                    {/* ROW 4: Display Status & Photo Customisation Selector */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-200 flex flex-col justify-between">
+                                            <div className="flex items-center justify-between mb-1">
                                                 <span className="text-sm font-bold text-gray-900">Display Status</span>
                                                 <label className="relative inline-flex items-center cursor-pointer">
                                                     <input
@@ -301,14 +389,93 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                                         checked={formData.isActive}
                                                         onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
                                                     />
-                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF64B4]"></div>
                                                 </label>
                                             </div>
-                                            <p className="text-xs text-gray-500 leading-relaxed">
+                                            <p className="text-[11px] text-gray-500 leading-snug">
                                                 {formData.isActive
                                                     ? "Active: Product is visible and available for purchase in the store."
                                                     : "Draft: Product is hidden from customers."}
                                             </p>
+                                        </div>
+
+                                        {/* Photo Customisation Selector (Yes / No) */}
+                                        <div className={`p-2.5 rounded-xl border transition-all flex flex-col justify-between ${
+                                            formData.isCustomizable === null ? 'bg-amber-50/40 border-amber-300' : 'bg-gray-50 border-gray-200'
+                                        }`}>
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                                                        <span>🎨 Requires Photo Upload?</span>
+                                                        <span className="text-rose-500 font-bold">*</span>
+                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        {formData.isCustomizable !== null && (
+                                                            <>
+                                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                                    formData.isCustomizable
+                                                                        ? 'bg-pink-100 text-[#FF64B4] border border-pink-200'
+                                                                        : 'bg-sky-100 text-[#00aeeb] border border-sky-200'
+                                                                }`}>
+                                                                    {formData.isCustomizable ? '📸 Photo Needed' : '📦 Ready-Made'}
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setFormData(prev => ({ ...prev, isCustomizable: null }))}
+                                                                    className="text-[11px] font-semibold text-gray-400 hover:text-rose-500 transition-colors ml-1"
+                                                                    title="Unselect"
+                                                                >
+                                                                    ✕ Clear
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({
+                                                            ...prev,
+                                                            isCustomizable: prev.isCustomizable === true ? null : true
+                                                        }))}
+                                                        className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
+                                                            formData.isCustomizable === true
+                                                                ? 'bg-[#FF64B4] text-white border-[#FF64B4] shadow-xs'
+                                                                : 'bg-white text-gray-700 border-gray-200 hover:border-pink-300 hover:bg-pink-50/50'
+                                                        }`}
+                                                    >
+                                                        <span>📸 Yes</span>
+                                                        <span className="text-[10px] font-normal opacity-90">(Custom Photo)</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({
+                                                            ...prev,
+                                                            isCustomizable: prev.isCustomizable === false ? null : false
+                                                        }))}
+                                                        className={`py-1.5 px-3 rounded-xl text-xs font-bold transition-all border flex items-center justify-center gap-1.5 ${
+                                                            formData.isCustomizable === false
+                                                                ? 'bg-[#00aeeb] text-white border-[#00aeeb] shadow-xs'
+                                                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#00aeeb]/50 hover:bg-sky-50/50'
+                                                        }`}
+                                                    >
+                                                        <span>📦 No</span>
+                                                        <span className="text-[10px] font-normal opacity-90">(Ready-Made)</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {formData.isCustomizable === null ? (
+                                                <p className="text-[10px] font-semibold text-amber-700 mt-1 flex items-center gap-1">
+                                                    <span>⚠️</span> Selection required: Choose Yes (Custom Photo) or No (Ready-Made).
+                                                </p>
+                                            ) : (
+                                                <p className="text-[11px] text-gray-500 mt-1 leading-snug">
+                                                    {formData.isCustomizable
+                                                        ? "Customer must upload their photo & message on the product page."
+                                                        : "Ready-made gift with no customer photo upload required."}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
@@ -331,16 +498,16 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                                 {formData.image ? (
                                                     <div className="relative w-full h-full flex items-center justify-center bg-white group">
                                                         <img
-                                                            src={formData.image.startsWith('http') ? formData.image : `http://localhost:5000${formData.image}`}
+                                                            src={formData.image.startsWith('http') ? formData.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${formData.image}`}
                                                             alt="Preview"
                                                             className="w-full h-full object-cover rounded-xl"
                                                             onError={(e) => e.target.style.display = 'none'}
                                                         />
                                                         <div className="absolute inset-0 flex items-center justify-center">
                                                             <button
-                                                                type="button"
-                                                                onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
-                                                                className="bg-white text-red-500 px-6 py-3 rounded-full font-medium shadow-md flex items-center gap-2 z-10"
+                                                                 type="button"
+                                                                 onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                                                                 className="bg-white text-red-500 px-6 py-3 rounded-full font-medium shadow-md flex items-center gap-2 z-10"
                                                             >
                                                                 <FiX size={18} /> Remove Image
                                                             </button>
@@ -370,7 +537,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                                                                 'Content-Type': 'multipart/form-data',
                                                                             },
                                                                         };
-                                                                        const { data } = await axios.post('http://localhost:5000/api/upload', formData, config);
+                                                                        const { data } = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/upload`, formData, config);
                                                                         setFormData(prev => ({ ...prev, image: data.image }));
                                                                     } catch (error) {
                                                                         console.error(error);
@@ -383,6 +550,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                             </div>
                                         </div>
                                     </div>
+
                                 </motion.div>
                             )}
 
@@ -501,7 +669,7 @@ const ProductModal = ({ isOpen, onClose, onSubmit, product = null, categories = 
                                             name="description"
                                             value={formData.description}
                                             onChange={handleChange}
-                                            className="w-full flex-1 min-h-[300px] px-5 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none resize-y text-gray-700 leading-relaxed shadow-inner"
+                                            className="w-full flex-1 min-h-[300px] px-5 py-4 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-[#FF64B4] focus:ring-4 focus:ring-[#FF64B4]/10 transition-all outline-none resize-y text-gray-700 leading-relaxed shadow-inner"
                                             placeholder="Enter comprehensive product details, features, specifications, and care instructions here...
 
 Example:
@@ -518,25 +686,23 @@ Perfect for gifting on special occasions."
 
                         </div>
                         {/* Footer / Action Buttons */}
-                        <div className="p-6 border-t border-gray-100 bg-gray-50/50 mt-auto min-h-[88px]">
-                            {activeTab === 'description' && (
-                                <div className="flex gap-3 max-w-3xl mx-auto justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        onClick={handleCloseModal}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        isLoading={loading}
-                                        icon={<FiCheck />}
-                                    >
-                                        Save Product
-                                    </Button>
-                                </div>
-                            )}
+                        <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/80 shrink-0 z-10">
+                            <div className="flex gap-3 max-w-4xl mx-auto justify-end">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={handleCloseModal}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    isLoading={loading}
+                                    icon={<FiCheck />}
+                                >
+                                    {product ? 'Update Product' : 'Add Product'}
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </motion.div >

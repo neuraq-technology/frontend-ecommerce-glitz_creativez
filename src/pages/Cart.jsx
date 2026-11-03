@@ -61,7 +61,7 @@ const Cart = () => {
     }
 
     return (
-        <div className="min-h-[calc(100vh-100px)] pt-20 sm:pt-24 pb-8 sm:pb-16 bg-white">
+        <div className="min-h-[calc(100vh-100px)] pt-44 md:pt-32 pb-8 sm:pb-16 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
@@ -133,7 +133,7 @@ const Cart = () => {
                                                     {item.product.size && (
                                                         <p className="text-sm font-medium text-gray-500 mt-1">Size: {item.product.size}</p>
                                                     )}
-                                                    <p className="text-lg sm:text-2xl font-bold text-primary-600 mt-1">
+                                                    <p className="text-lg sm:text-2xl font-bold text-gray-900 mt-1">
                                                         ₹{item.product.price?.toFixed(2)}
                                                     </p>
                                                 </div>

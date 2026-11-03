@@ -45,6 +45,7 @@ const Input = ({
             text-gray-900 placeholder-gray-400
             transition-all duration-200
             focus:outline-none focus:ring-4 focus:ring-primary-500/10
+            disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed disabled:border-gray-200
             ${icon ? 'pl-12' : ''}
             ${isPassword ? 'pr-12' : ''}
             ${error

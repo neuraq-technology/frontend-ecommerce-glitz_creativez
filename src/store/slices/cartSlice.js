@@ -21,10 +21,11 @@ const cartSlice = createSlice({
         addItem: (state, action) => {
             const newItem = action.payload;
             const sizeString = newItem.product.size ? `-${newItem.product.size}` : '';
-            const cartItemId = newItem.cartItemId || `${newItem.product._id}${sizeString}`;
+            const customHash = (newItem.customImage || newItem.customText) ? `-${Date.now()}` : '';
+            const cartItemId = newItem.cartItemId || `${newItem.product._id}${sizeString}${customHash}`;
 
-            const existingItem = state.items.find(
-                (item) => item.cartItemId === cartItemId || (item.product._id === newItem.product._id && item.product.size === newItem.product.size)
+            const existingItem = !customHash && state.items.find(
+                (item) => item.cartItemId === cartItemId || (item.product._id === newItem.product._id && item.product.size === newItem.product.size && !item.customImage)
             );
 
             if (existingItem) {
@@ -33,6 +34,8 @@ const cartSlice = createSlice({
                 state.items.push({
                     ...newItem,
                     cartItemId,
+                    customImage: newItem.customImage || newItem.product?.customImage || '',
+                    customText: newItem.customText || newItem.product?.customText || '',
                     quantity: newItem.quantity || 1,
                 });
             }

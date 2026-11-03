@@ -42,6 +42,22 @@ export default {
                     cream: '#fafcff',
                     honey: '#d0f3fc',
                 },
+                // Semantic State Colors
+                success: {
+                    DEFAULT: '#10b981',
+                    light: '#d1fae5',
+                    dark: '#047857'
+                },
+                error: {
+                    DEFAULT: '#ef4444',
+                    light: '#fee2e2',
+                    dark: '#b91c1c'
+                },
+                warning: {
+                    DEFAULT: '#f59e0b',
+                    light: '#fef3c7',
+                    dark: '#b45309'
+                },
                 // Light theme backgrounds - Cool & Modern
                 light: {
                     bg: '#fafcff',

@@ -6,7 +6,7 @@ export const updateProfile = createAsyncThunk(
         try {
             const { auth: { token } } = getState();
 
-            const response = await fetch('http://localhost:5000/api/auth/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/profile`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -41,8 +41,8 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         setCredentials: (state, action) => {
-            const { _id, name, email, isAdmin, avatar, token } = action.payload;
-            state.user = { _id, name, email, isAdmin, avatar };
+            const { _id, name, email, isAdmin, avatar, token, supportEmail, phone } = action.payload;
+            state.user = { _id, name, email, isAdmin, avatar, supportEmail, phone };
             state.token = token;
             state.isAuthenticated = true;
             localStorage.setItem('user', JSON.stringify(state.user));
@@ -63,8 +63,17 @@ const authSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(updateProfile.fulfilled, (state, action) => {
-                const { _id, name, email, isAdmin, avatar, token } = action.payload;
-                state.user = { _id, name, email, isAdmin, avatar };
+                const { _id, name, email, isAdmin, avatar, token, supportEmail, phone } = action.payload;
+                state.user = {
+                    ...state.user,
+                    _id,
+                    name,
+                    email,
+                    isAdmin,
+                    avatar,
+                    supportEmail: supportEmail !== undefined ? supportEmail : state.user?.supportEmail,
+                    phone: phone !== undefined ? phone : state.user?.phone
+                };
                 if (token) {
                     state.token = token;
                     localStorage.setItem('token', token);

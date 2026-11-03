@@ -11,14 +11,12 @@ import {
     FiX,
     FiLogOut,
     FiGift,
-    FiBell,
     FiPackage,
 } from 'react-icons/fi';
 import logoImg from '../../assets/images/PNG.png';
-import { selectCartItemsCount, openCart } from '../../store/slices/cartSlice';
+import { selectCartItemsCount } from '../../store/slices/cartSlice';
 import { selectCurrentUser, logout } from '../../store/slices/authSlice';
 import { useGetWishlistQuery } from '../../store/api/authApi';
-
 
 const Navbar = () => {
     const dispatch = useDispatch();
@@ -26,74 +24,54 @@ const Navbar = () => {
     const location = useLocation();
 
     const [isScrolled, setIsScrolled] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-    // Secret Admin Login State
-    const [clickCount, setClickCount] = useState(0);
-    const [clickTimer, setClickTimer] = useState(null);
-
-    const handleLogoClick = (e) => {
-        setClickCount(prev => prev + 1);
-
-        if (clickTimer) {
-            clearTimeout(clickTimer);
-        }
-
-        // Set a timer to reset count if not clicked again within 2 seconds
-        const timer = setTimeout(() => {
-            setClickCount(0);
-        }, 2000);
-        setClickTimer(timer);
-    };
-
-    // Check count effect
-    useEffect(() => {
-        if (clickCount >= 3) {
-            setClickCount(0);
-            if (clickTimer) clearTimeout(clickTimer);
-            navigate('/admin/auth');
-        }
-    }, [clickCount, clickTimer, navigate]);
-
-
-
-    const cartItemsCount = useSelector(selectCartItemsCount);
     const user = useSelector(selectCurrentUser);
-
-    // Fetch wishlist data (skip if not logged in)
+    const cartItemsCount = useSelector(selectCartItemsCount);
     const { data: wishlistData } = useGetWishlistQuery(undefined, {
         skip: !user,
     });
-
     const wishlistCount = wishlistData?.data?.length || 0;
 
     useEffect(() => {
+        let ticking = false;
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    setIsScrolled(window.scrollY > 30);
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
-
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
-
-    useEffect(() => {
-        setIsMobileMenuOpen(false);
-    }, [location]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+            navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+            setIsSearchOpen(false);
             setSearchQuery('');
-            setIsSearchOpen(false); // Close desktop search modal if open
         }
     };
 
     const handleLogout = () => {
         dispatch(logout());
         navigate('/');
+    };
+
+    const handleLogoClick = (e) => {
+        if (location.pathname === '/') {
+            e.preventDefault();
+            try {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch {
+                window.scrollTo(0, 0);
+            }
+        }
     };
 
     const navLinks = [
@@ -104,195 +82,225 @@ const Navbar = () => {
 
     return (
         <>
-            <motion.nav
-                initial={{ y: -100 }}
-                animate={{ y: 0 }}
-                className={`
-          fixed top-0 left-0 right-0 z-50
-          transition-all duration-300
-          border-b border-primary-100
-          ${isScrolled
-                        ? 'bg-white/95 backdrop-blur-xl shadow-gold'
-                        : 'bg-white/80 backdrop-blur-sm'
-                    }
-        `}
-            >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Desktop Layout */}
-                    <div className="hidden md:flex items-center justify-between h-20">
-                        {/* Logo */}
-                        <Link to="/" className="flex items-center space-x-2">
-                            <motion.div
-                                whileHover={{ scale: 1.05 }}
-                                className="flex items-center gap-2"
-                                onClick={handleLogoClick}
-                            >
-                                <img src={logoImg} alt="Glitz Creativez" className="h-16 w-auto" />
-                            </motion.div>
-                        </Link>
+            <header className="fixed top-0 left-0 right-0 z-50">
+                <nav
+                    className={`
+                        w-full bg-white transition-shadow duration-200
+                        ${isScrolled
+                            ? 'shadow-md border-b border-gray-100'
+                            : 'border-b border-gray-100/80'
+                        }
+                    `}
+                >
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        {/* ================= DESKTOP LAYOUT (OPTION A) ================= */}
+                        <div className="hidden md:flex flex-col">
+                            {/* Row 1: ONLY the Brand Logo Centered on Top */}
+                            <div className="flex items-center justify-center py-2.5">
+                                <Link to="/" onClick={handleLogoClick} className="flex items-center justify-center group">
+                                    <motion.div
+                                        whileHover={{ scale: 1.04 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <img
+                                            src={logoImg}
+                                            alt="Glitz Creativez"
+                                            className="h-16 lg:h-18 w-auto object-contain drop-shadow-xs"
+                                        />
+                                    </motion.div>
+                                </Link>
+                            </div>
 
-                        {/* Search Bar */}
-                        <div className="flex flex-1 justify-center px-8">
-                            <form onSubmit={handleSearch} className="w-full max-w-md">
-                                <div className="relative">
-                                    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search..."
-                                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:bg-white caret-primary-600 transition-all text-sm"
-                                    />
+                            {/* Row 2: All Other Elements on the Same Line:
+                                [ Home • Shop Gifts • Categories ] (Left)
+                                [ Search Bar ] (Center)
+                                [ Wishlist • Cart • Profile ] (Right)
+                            */}
+                            <div className="flex items-center justify-between py-2 border-t border-gray-100/80 gap-4 lg:gap-6">
+                                {/* Left: Navigation Links */}
+                                <div className="flex items-center gap-5 lg:gap-7 flex-shrink-0">
+                                    {navLinks.map((link) => {
+                                        const isActive = location.pathname === link.path;
+                                        return (
+                                            <Link
+                                                key={link.name}
+                                                to={link.path}
+                                                onClick={(e) => {
+                                                    if (link.path === '/' && location.pathname === '/') {
+                                                        handleLogoClick(e);
+                                                    }
+                                                }}
+                                                className={`text-xs lg:text-sm font-semibold tracking-wide transition-all relative py-1 group ${
+                                                    isActive ? 'text-[#FF64B4]' : 'text-gray-700 hover:text-[#FF64B4]'
+                                                }`}
+                                            >
+                                                {link.name}
+                                                <span className={`absolute -bottom-0.5 left-0 h-0.5 bg-[#FF64B4] transition-all duration-300 rounded-full ${
+                                                    isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                                                }`}></span>
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
-                            </form>
-                        </div>
 
-                        {/* Right Icons */}
-                        <div className="flex items-center space-x-4">
-                            {user && (
-                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                    <Link to="/wishlist" className="p-2 text-gray-500 hover:text-primary-600 transition-colors">
-                                        <div className="relative inline-block">
-                                            <FiHeart size={22} />
+                                {/* Center: Search Bar */}
+                                <div className="flex-1 max-w-xs lg:max-w-md mx-2">
+                                    <form onSubmit={handleSearch} className="relative group">
+                                        <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#FF64B4] transition-colors" size={17} />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search gifts, hampers..."
+                                            className="w-full pl-10 pr-4 py-2 bg-gray-50/80 border border-gray-200 rounded-full text-xs lg:text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF64B4] focus:bg-white focus:ring-2 focus:ring-[#FF64B4]/20 transition-all shadow-inner"
+                                        />
+                                    </form>
+                                </div>
+
+                                {/* Right Side: Actions (Wishlist, Cart, Profile) */}
+                                <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+                                    {user && (
+                                        <Link
+                                            to="/wishlist"
+                                            className="relative p-2.5 text-gray-600 hover:text-[#FF64B4] hover:bg-pink-50 rounded-full transition-all group"
+                                            title="My Wishlist"
+                                        >
+                                            <FiHeart size={21} className="group-hover:scale-110 transition-transform" />
                                             {wishlistCount > 0 && (
-                                                <span className="absolute -top-3 -right-3 w-5 h-5 bg-pink-500 rounded-full text-xs font-bold flex items-center justify-center text-white shadow-sm border border-white z-10">
-                                                    {wishlistCount}
+                                                <span className="absolute top-0 right-0 w-4 h-4 bg-[#FF64B4] rounded-full text-[10px] font-bold flex items-center justify-center text-white shadow-xs">
+                                                    {wishlistCount > 9 ? '9+' : wishlistCount}
                                                 </span>
                                             )}
-                                        </div>
-                                    </Link>
-                                </motion.div>
-                            )}
+                                        </Link>
+                                    )}
 
-                            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                                <Link
-                                    to="/cart"
-                                    className="p-2 text-gray-500 hover:text-primary-600 transition-colors"
-                                >
-                                    <div className="relative inline-block">
-                                        <FiShoppingCart size={22} />
+                                    <Link
+                                        to="/cart"
+                                        className="relative p-2.5 text-gray-600 hover:text-[#FF64B4] hover:bg-pink-50 rounded-full transition-all group"
+                                        title="Shopping Cart"
+                                    >
+                                        <FiShoppingCart size={21} className="group-hover:scale-110 transition-transform" />
                                         {cartItemsCount > 0 && (
-                                            <span className="absolute -top-3 -right-3 w-5 h-5 bg-primary-500 rounded-full text-xs font-bold flex items-center justify-center text-white shadow-sm border border-white z-10">
-                                                {cartItemsCount}
+                                            <span className="absolute top-0 right-0 w-4 h-4 bg-[#FF64B4] rounded-full text-[10px] font-bold flex items-center justify-center text-white shadow-xs">
+                                                {cartItemsCount > 9 ? '9+' : cartItemsCount}
                                             </span>
                                         )}
-                                    </div>
-                                </Link>
-                            </motion.div>
+                                    </Link>
 
-                            {/* User Menu consolidation */}
-                            {user ? (
-                                <div className="relative group">
-                                    <motion.button
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="p-2 text-gray-500 hover:text-primary-600 transition-colors"
-                                    >
-                                        <FiUser size={22} />
-                                    </motion.button>
-
-                                    {/* Dropdown */}
-                                    <div className="absolute right-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[60]">
-                                        <div className="bg-white rounded-xl shadow-soft-lg border border-primary-100 p-2 mt-2">
-                                            {user.isAdmin && (
-                                                <Link to="/admin" className="flex items-center gap-2 px-4 py-2 text-sm text-primary-600 font-medium hover:bg-primary-50 rounded-lg transition-colors">
-                                                    <FiGift size={16} /> Admin Dashboard
-                                                </Link>
-                                            )}
-                                            <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
-                                                <FiUser size={16} /> Profile
-                                            </Link>
-                                            <Link to="/orders" className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
-                                                <FiPackage size={16} /> My Orders
-                                            </Link>
-                                            <button onClick={handleLogout} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <FiLogOut size={16} /> Logout
+                                    {/* User Menu */}
+                                    {user ? (
+                                        <div className="relative group ml-1">
+                                            <button className="p-2.5 text-gray-600 hover:text-[#FF64B4] hover:bg-pink-50 rounded-full transition-all">
+                                                <FiUser size={21} className="group-hover:scale-110 transition-transform" />
                                             </button>
+
+                                            <div className="absolute right-0 mt-1 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-[60]">
+                                                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 overflow-hidden">
+                                                    <div className="px-4 py-3 border-b border-gray-100 mb-2">
+                                                        <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{user.email || user.phone}</p>
+                                                    </div>
+                                                    {user.isAdmin && (
+                                                        <Link to="/admin" className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#FF64B4] font-medium hover:bg-pink-50 rounded-xl transition-colors">
+                                                            <FiGift size={16} /> Admin Dashboard
+                                                        </Link>
+                                                    )}
+                                                    <Link to="/profile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-[#FF64B4] hover:bg-pink-50 rounded-xl transition-colors">
+                                                        <FiUser size={16} /> My Profile
+                                                    </Link>
+                                                    <Link to="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:text-[#FF64B4] hover:bg-pink-50 rounded-xl transition-colors">
+                                                        <FiPackage size={16} /> Order History
+                                                    </Link>
+                                                    <div className="h-px bg-gray-100 my-1"></div>
+                                                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
+                                                        <FiLogOut size={16} /> Sign Out
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
+                                    ) : (
+                                        <Link to="/auth" className="ml-1">
+                                            <button className="bg-[#FF64B4] hover:bg-[#e0529f] text-white font-bold text-xs lg:text-sm px-4 lg:px-5 py-2 rounded-xl shadow-xs transition-all">
+                                                Sign In
+                                            </button>
+                                        </Link>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ================= MOBILE & TABLET LAYOUT ================= */}
+                        <div className={`md:hidden flex flex-col ${location.pathname === '/profile' ? 'py-3' : 'py-2.5 space-y-2.5'}`}>
+                            {/* Centered Large Brand Logo */}
+                            <div className="flex items-center justify-center w-full">
+                                <Link to="/" onClick={handleLogoClick} className="flex items-center justify-center">
+                                    <img
+                                        src={logoImg}
+                                        alt="Glitz Creativez"
+                                        className="h-16 sm:h-20 w-auto object-contain transition-all duration-300 drop-shadow-xs"
+                                    />
+                                </Link>
+                            </div>
+
+                            {/* Mobile Search Row + Action Icons */}
+                            {location.pathname !== '/profile' && (
+                                <div className="flex items-center gap-2">
+                                    <form onSubmit={handleSearch} className="flex-1 relative group">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search for gifts, hampers, cakes..."
+                                            className="w-full pl-4 pr-10 py-2 bg-gray-50/90 border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF64B4] focus:bg-white focus:ring-2 focus:ring-[#FF64B4]/20 caret-[#FF64B4] transition-all text-xs sm:text-sm shadow-inner"
+                                        />
+                                        <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF64B4] transition-colors">
+                                            <FiSearch size={16} />
+                                        </button>
+                                    </form>
+
+                                    {/* Mobile Quick Actions (Wishlist & Cart) */}
+                                    <div className="flex items-center gap-1">
+                                        <Link
+                                            to={user ? "/wishlist" : "/auth"}
+                                            className="relative p-2 text-gray-600 hover:text-[#FF64B4] transition-colors"
+                                            title="Wishlist"
+                                        >
+                                            <FiHeart size={20} />
+                                            {user && wishlistCount > 0 && (
+                                                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#FF64B4] rounded-full text-[10px] font-bold flex items-center justify-center text-white shadow-xs">
+                                                    {wishlistCount > 9 ? '9+' : wishlistCount}
+                                                </span>
+                                            )}
+                                        </Link>
+
+                                        <Link
+                                            to="/cart"
+                                            className="relative p-2 text-gray-600 hover:text-[#FF64B4] transition-colors"
+                                            title="Cart"
+                                        >
+                                            <FiShoppingCart size={20} />
+                                            {cartItemsCount > 0 && (
+                                                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#FF64B4] rounded-full text-[10px] font-bold flex items-center justify-center text-white shadow-xs">
+                                                    {cartItemsCount > 9 ? '9+' : cartItemsCount}
+                                                </span>
+                                            )}
+                                        </Link>
                                     </div>
                                 </div>
-                            ) : (
-                                <Link to="/auth">
-                                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="btn-primary text-sm">
-                                        Sign In
-                                    </motion.button>
-                                </Link>
                             )}
                         </div>
                     </div>
+                </nav>
+            </header>
 
-                    {/* Mobile Layout - Two Rows: Logo on top, Search + Icons below */}
-                    <div className={`md:hidden flex flex-col ${location.pathname === '/profile' ? 'py-5' : 'py-3 space-y-3'}`}>
-                        {/* Top Row: Centered Logo */}
-                        <div className="flex items-center justify-center w-full">
-                            <Link to="/" className="flex items-center gap-2">
-                                <img src={logoImg} alt="Glitz Creativez" className="h-12 w-auto" />
-                            </Link>
-                        </div>
-
-                        {/* Bottom Row: Search Bar + Action Icons - Hidden on Profile page */}
-                        {location.pathname !== '/profile' && (
-                            <div className="flex items-center gap-2">
-                                {/* Search Bar - Full width on home/wishlist/cart/orders pages */}
-                                <form onSubmit={handleSearch} className="flex-1 relative">
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search 'Products'"
-                                        className="w-full pl-4 pr-10 py-2.5 bg-gray-100 border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-500/20 caret-primary-600 transition-all text-sm"
-                                    />
-                                    <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 transition-colors">
-                                        <FiSearch size={18} />
-                                    </button>
-                                </form>
-
-                                {/* Right Action Icons - Hide on home/wishlist/cart/orders pages */}
-                                {!['/'].includes(location.pathname) &&
-                                    !location.pathname.startsWith('/wishlist') &&
-                                    !location.pathname.startsWith('/cart') &&
-                                    !location.pathname.startsWith('/orders') && (
-                                        <div className="flex items-center gap-1">
-                                            {/* Cart Icon */}
-                                            <Link to="/cart" className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                                                <FiShoppingCart size={20} />
-                                                {cartItemsCount > 0 && (
-                                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-primary-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
-                                                        {cartItemsCount > 9 ? '9+' : cartItemsCount}
-                                                    </span>
-                                                )}
-                                            </Link>
-
-                                            {/* Wishlist Icon */}
-                                            <Link to={user ? "/wishlist" : "/auth"} className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                                                <FiHeart size={20} />
-                                                {user && wishlistCount > 0 && (
-                                                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-pink-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
-                                                        {wishlistCount > 9 ? '9+' : wishlistCount}
-                                                    </span>
-                                                )}
-                                            </Link>
-
-                                            {/* Profile Icon */}
-                                            <Link to={user ? "/profile" : "/auth"} className="p-2 text-gray-600 hover:text-primary-600 transition-colors">
-                                                <FiUser size={20} />
-                                            </Link>
-                                        </div>
-                                    )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </motion.nav>
-
-            {/* Desktop Search Modal */}
+            {/* Desktop Search Modal (fallback if triggered) */}
             <AnimatePresence>
                 {isSearchOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm flex items-start justify-center pt-32"
+                        className="fixed inset-0 z-[60] bg-black/60 flex items-start justify-center pt-32"
                         onClick={() => setIsSearchOpen(false)}
                     >
                         <motion.form
@@ -304,21 +312,21 @@ const Navbar = () => {
                             className="w-full max-w-2xl mx-4"
                         >
                             <div className="relative">
-                                <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-400" size={24} />
+                                <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-[#FF64B4]" size={22} />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search for the perfect gift..."
                                     autoFocus
-                                    className="w-full pl-16 pr-6 py-5 text-xl bg-white border border-primary-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-500/10 shadow-gold-lg transition-all"
+                                    className="w-full pl-16 pr-6 py-4 text-lg bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#FF64B4] focus:ring-4 focus:ring-[#FF64B4]/10 shadow-xl transition-all"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setIsSearchOpen(false)}
                                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors"
                                 >
-                                    <FiX size={24} />
+                                    <FiX size={22} />
                                 </button>
                             </div>
                         </motion.form>
