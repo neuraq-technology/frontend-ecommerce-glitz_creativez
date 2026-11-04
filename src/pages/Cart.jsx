@@ -11,6 +11,7 @@ import {
     clearCart,
 } from '../store/slices/cartSlice';
 import { selectIsAuthenticated } from '../store/slices/authSlice';
+import { useGetSettingsQuery } from '../store/api/settingsApi';
 import Button from '../components/common/Button';
 import BackButton from '../components/common/BackButton';
 import Breadcrumbs from '../components/common/Breadcrumbs';
@@ -22,8 +23,12 @@ const Cart = () => {
     const subtotal = useSelector(selectCartTotal);
     const isAuthenticated = useSelector(selectIsAuthenticated);
 
+    const { data: settingsData } = useGetSettingsQuery();
+    const deliveryFee = settingsData?.data?.deliveryFee ?? 40;
+    const freeDeliveryThreshold = settingsData?.data?.freeDeliveryThreshold ?? 499;
+
     const taxRate = 0.1;
-    const shippingCost = subtotal > 100 ? 0 : 10;
+    const shippingCost = subtotal >= freeDeliveryThreshold ? 0 : deliveryFee;
     const tax = subtotal * taxRate;
     const total = subtotal + tax + shippingCost;
 

@@ -32,6 +32,7 @@ import {
     useCreateReviewMutation,
 } from '../store/api/productsApi';
 import { useToggleWishlistMutation, useGetWishlistQuery } from '../store/api/authApi';
+import { useGetSettingsQuery } from '../store/api/settingsApi';
 import { addItem } from '../store/slices/cartSlice';
 import { addToast } from '../store/slices/uiSlice';
 import { selectIsAuthenticated, selectCurrentUser } from '../store/slices/authSlice';
@@ -121,6 +122,10 @@ const ProductDetail = () => {
     );
 
     const [createReview, { isLoading: isSubmittingReview }] = useCreateReviewMutation();
+    const { data: settingsData } = useGetSettingsQuery();
+    const deliveryFee = settingsData?.data?.deliveryFee ?? 40;
+    const freeDeliveryThreshold = settingsData?.data?.freeDeliveryThreshold ?? 499;
+    const estimatedDeliveryDays = settingsData?.data?.estimatedDeliveryDays || '3-5 Business Days';
 
     const product = productData?.data;
 
@@ -609,8 +614,34 @@ const ProductDetail = () => {
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-gray-500 mt-1">
-                                    Inclusive of all taxes • Free Delivery on prepaid orders
+                                    Inclusive of all taxes
                                 </p>
+
+                                {/* Dynamic Delivery Fee from Admin Settings */}
+                                <div className="mt-2.5 p-2.5 bg-gray-50/80 rounded-xl border border-gray-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-pink-100/70 text-[#FF64B4] flex items-center justify-center shrink-0">
+                                            <FiTruck size={13} />
+                                        </div>
+                                        <div>
+                                            <span className="font-bold text-gray-800">
+                                                {deliveryFee === 0 || displayPrice >= freeDeliveryThreshold ? (
+                                                    <span className="text-emerald-700 font-bold">FREE Delivery</span>
+                                                ) : (
+                                                    <span>Delivery Fee: <strong className="text-gray-900 font-bold">₹{deliveryFee}</strong></span>
+                                                )}
+                                            </span>
+                                            {freeDeliveryThreshold > 0 && deliveryFee > 0 && displayPrice < freeDeliveryThreshold && (
+                                                <span className="text-gray-500 text-[11px] ml-1.5">
+                                                    (FREE on orders over ₹{freeDeliveryThreshold})
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className="text-[10px] font-semibold text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">
+                                        {estimatedDeliveryDays}
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Stock Status */}

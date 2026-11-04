@@ -31,6 +31,7 @@ import {
     useCreateCashfreeOrderMutation,
     useVerifyCashfreePaymentMutation,
 } from '../store/api/ordersApi';
+import { useGetSettingsQuery } from '../store/api/settingsApi';
 import { addToast } from '../store/slices/uiSlice';
 import Button from '../components/common/Button';
 import BackButton from '../components/common/BackButton';
@@ -118,9 +119,13 @@ const Checkout = () => {
         const orig = p.originalPrice > p.price ? p.originalPrice : Math.round((p.price || item.price || 0) * 1.25);
         return acc + orig * item.quantity;
     }, 0);
+    const { data: settingsData } = useGetSettingsQuery();
+    const deliveryFee = settingsData?.data?.deliveryFee ?? 40;
+    const freeDeliveryThreshold = settingsData?.data?.freeDeliveryThreshold ?? 499;
+
     const totalDiscount = Math.max(0, itemsOriginalTotal - itemsSellingTotal);
     const taxRate = 0.1;
-    const shippingCost = itemsSellingTotal > 100 ? 0 : 10;
+    const shippingCost = itemsSellingTotal >= freeDeliveryThreshold ? 0 : deliveryFee;
     const tax = itemsSellingTotal * taxRate;
     const total = itemsSellingTotal + tax + shippingCost;
 
@@ -547,24 +552,17 @@ const Checkout = () => {
                                         />
                                     </div>
 
-                                    <Input
-                                        label="10-digit Mobile Number *"
-                                        name="phone"
-                                        type="tel"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
-                                        placeholder="e.g. 9020302499"
-                                        required
-                                    />
-
-                                    <Input
-                                        label="Email Address (for order updates)"
-                                        name="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        placeholder="you@example.com"
-                                    />
+                                    <div className="sm:col-span-2">
+                                        <Input
+                                            label="10-digit Mobile Number *"
+                                            name="phone"
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+                                            placeholder="e.g. 9020302499"
+                                            required
+                                        />
+                                    </div>
 
                                     <div className="sm:col-span-2">
                                         <Input

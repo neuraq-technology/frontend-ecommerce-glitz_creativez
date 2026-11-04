@@ -14,12 +14,14 @@ import {
     FiSettings,
     FiSliders,
     FiKey,
-    FiEdit2
+    FiEdit2,
+    FiTruck
 } from 'react-icons/fi';
 import { useDispatch, useSelector } from 'react-redux';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { updateProfile, selectCurrentUser } from '../../store/slices/authSlice';
+import { useGetSettingsQuery, useUpdateSettingsMutation } from '../../store/api/settingsApi';
 import { addToast } from '../../store/slices/uiSlice';
 
 const AdminSettingsTab = () => {
@@ -44,6 +46,43 @@ const AdminSettingsTab = () => {
             weeklyAnalytics: false
         }
     });
+
+    const { data: storeSettingsData, isLoading: isSettingsLoading } = useGetSettingsQuery();
+    const [updateSettings, { isLoading: isUpdatingSettings }] = useUpdateSettingsMutation();
+
+    const [deliveryForm, setDeliveryForm] = useState({
+        deliveryFee: 40,
+        freeDeliveryThreshold: 499,
+        estimatedDeliveryDays: '3-5 Business Days',
+        isCodAvailable: true
+    });
+
+    useEffect(() => {
+        if (storeSettingsData?.data) {
+            setDeliveryForm({
+                deliveryFee: storeSettingsData.data.deliveryFee ?? 40,
+                freeDeliveryThreshold: storeSettingsData.data.freeDeliveryThreshold ?? 499,
+                estimatedDeliveryDays: storeSettingsData.data.estimatedDeliveryDays || '3-5 Business Days',
+                isCodAvailable: storeSettingsData.data.isCodAvailable ?? true
+            });
+        }
+    }, [storeSettingsData]);
+
+    const handleSaveDelivery = async (e) => {
+        e.preventDefault();
+        try {
+            await updateSettings(deliveryForm).unwrap();
+            dispatch(addToast({
+                type: 'success',
+                message: 'Store delivery fees & shipping settings updated successfully!'
+            }));
+        } catch (err) {
+            dispatch(addToast({
+                type: 'error',
+                message: err?.data?.message || 'Failed to update delivery settings'
+            }));
+        }
+    };
 
     useEffect(() => {
         if (user) {
@@ -201,6 +240,12 @@ const AdminSettingsTab = () => {
             label: 'General Profile',
             subtitle: 'Master administrator & support contact',
             icon: <FiUser size={18} />
+        },
+        {
+            id: 'shipping',
+            label: 'Delivery & Shipping',
+            subtitle: 'Delivery fees, free delivery & COD',
+            icon: <FiTruck size={18} />
         },
         {
             id: 'security',
@@ -403,7 +448,138 @@ const AdminSettingsTab = () => {
                         </motion.div>
                     )}
 
-                    {/* 2. Security Tab */}
+                    {/* 2. Delivery & Shipping Tab */}
+                    {subTab === 'shipping' && (
+                        <motion.div
+                            key="shipping"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm space-y-6"
+                        >
+                            <div className="pb-4 border-b border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">Delivery & Shipping Fees</h3>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        Configure store delivery charges, free shipping thresholds, and estimated arrival times
+                                    </p>
+                                </div>
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    Active on Store
+                                </span>
+                            </div>
+
+                            <form onSubmit={handleSaveDelivery} className="space-y-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    {/* Standard Delivery Fee */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                            Standard Delivery Fee (₹)
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">₹</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={deliveryForm.deliveryFee}
+                                                onChange={(e) => setDeliveryForm(prev => ({ ...prev, deliveryFee: Number(e.target.value) }))}
+                                                placeholder="e.g. 40"
+                                                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#FF64B4] focus:bg-white focus:ring-2 focus:ring-[#FF64B4]/15 transition-all"
+                                                required
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 mt-1">Charged on orders below the free shipping threshold</p>
+                                    </div>
+
+                                    {/* Free Delivery Threshold */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                            Free Delivery Above Order Value (₹)
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">₹</span>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="1"
+                                                value={deliveryForm.freeDeliveryThreshold}
+                                                onChange={(e) => setDeliveryForm(prev => ({ ...prev, freeDeliveryThreshold: Number(e.target.value) }))}
+                                                placeholder="e.g. 499"
+                                                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#FF64B4] focus:bg-white focus:ring-2 focus:ring-[#FF64B4]/15 transition-all"
+                                                required
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-gray-400 mt-1">Orders at or above this amount receive 100% FREE delivery</p>
+                                    </div>
+
+                                    {/* Estimated Delivery Time */}
+                                    <div className="sm:col-span-2">
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                                            Estimated Delivery Timeline
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={deliveryForm.estimatedDeliveryDays}
+                                            onChange={(e) => setDeliveryForm(prev => ({ ...prev, estimatedDeliveryDays: e.target.value }))}
+                                            placeholder="e.g. 3-5 Business Days"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#FF64B4] focus:bg-white focus:ring-2 focus:ring-[#FF64B4]/15 transition-all"
+                                            required
+                                        />
+                                        <p className="text-[11px] text-gray-400 mt-1">Shown on product pages and checkout to manage customer expectations</p>
+                                    </div>
+
+                                    {/* Cash on Delivery (COD) Toggle */}
+                                    <div className="sm:col-span-2 p-4 bg-gray-50 rounded-2xl border border-gray-200/80 flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-sm font-bold text-gray-900">Cash on Delivery (COD)</h4>
+                                            <p className="text-xs text-gray-500 mt-0.5">
+                                                Allow shoppers to pay cash upon parcel handover
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeliveryForm(prev => ({ ...prev, isCodAvailable: !prev.isCodAvailable }))}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
+                                                deliveryForm.isCodAvailable ? 'bg-[#FF64B4]' : 'bg-gray-300'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                    deliveryForm.isCodAvailable ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Preview Card */}
+                                <div className="p-4 rounded-2xl bg-pink-50/60 border border-pink-200/60 flex items-center gap-3">
+                                    <div className="p-2.5 rounded-xl bg-white text-[#FF64B4] shadow-xs shrink-0">
+                                        <FiTruck size={20} />
+                                    </div>
+                                    <div className="text-xs text-gray-700">
+                                        <p className="font-bold text-gray-900">Live Customer Display Preview:</p>
+                                        <p className="mt-0.5">
+                                            Delivery Fee: <strong className="text-gray-900">₹{deliveryForm.deliveryFee}</strong> • FREE on orders above <strong className="text-gray-900">₹{deliveryForm.freeDeliveryThreshold}</strong> • Timeline: <strong className="text-gray-900">{deliveryForm.estimatedDeliveryDays}</strong>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 flex justify-end">
+                                    <Button
+                                        type="submit"
+                                        isLoading={isUpdatingSettings}
+                                        icon={<FiCheck />}
+                                    >
+                                        Save Delivery Settings
+                                    </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    )}
+
+                    {/* 3. Security Tab */}
                     {subTab === 'security' && (
                         <motion.div
                             key="security"
